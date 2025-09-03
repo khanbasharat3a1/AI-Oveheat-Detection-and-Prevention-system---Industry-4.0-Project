@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Enabled Industrial Motor Monitoring System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Moment.js for time formatting -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --dark-color: #1f2937;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-connected { background-color: var(--success-color); }
+        .status-disconnected { background-color: var(--danger-color); }
+        .status-warning { background-color: var(--warning-color); }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .health-score-excellent { color: var(--success-color); }
+        .health-score-good { color: #22c55e; }
+        .health-score-warning { color: var(--warning-color); }
+        .health-score-critical { color: var(--danger-color); }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .alert-item {
+            border-left: 4px solid;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .alert-critical { border-left-color: var(--danger-color); }
+        .alert-warning { border-left-color: var(--warning-color); }
+        .alert-info { border-left-color: var(--primary-color); }
+
+        .control-button {
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--dark-color) 0%, #374151 100%);
+            min-height: 100vh;
+        }
+
+        .sidebar .nav-link {
+            color: #d1d5db;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .data-gap {
+            background: repeating-linear-gradient(
+                45deg,
+                #fee2e2,
+                #fee2e2 10px,
+                #fecaca 10px,
+                #fecaca 20px
+            );
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .updating {
+            animation: pulse 1s infinite;
+        }
+
+        .section-title {
+            color: var(--dark-color);
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        /* New additions with original styling */
+        .health-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .health-category {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 3px;
+        }
+
+        .health-category-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .health-category-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .recommendation-card {
+            border-left: 4px solid;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .rec-critical { border-left-color: var(--danger-color); }
+        .rec-high { border-left-color: #dc2626; }
+        .rec-medium { border-left-color: var(--warning-color); }
+        .rec-low { border-left-color: var(--primary-color); }
+
+        .alert-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .data-unavailable {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .relay-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .relay-on {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .relay-off {
+            background: #6b7280;
+            color: white;
+        }
+
+        .relay-unknown {
+            background: var(--warning-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-gear-fill me-2"></i>
+                AI Motor Monitor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item d-flex align-items-center me-3">
+                    <span class="status-indicator" id="connectionStatus"></span>
+                    <span class="text-white" id="connectionText">Connecting...</span>
+                </div>
+                <div class="nav-item">
+                    <span class="text-white" id="lastUpdate">Last Update: --</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-md-block sidebar collapse" id="sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#overview">
+                                <i class="bi bi-speedometer2 me-2"></i>Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="#health">
+                                <i class="bi bi-heart-pulse me-2"></i>Health Analysis
+                                <span class="alert-badge" id="healthAlertBadge" style="display: none;">!</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#sensors">
+                                <i class="bi bi-thermometer-half me-2"></i>Sensors
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#power">
+                                <i class="bi bi-lightning-fill me-2"></i>Power Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#environment">
+                                <i class="bi bi-cloud-sun me-2"></i>Environment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="#ai-insights">
+                                <i class="bi bi-robot me-2"></i>AI Insights
+                                <span class="alert-badge" id="recAlertBadge" style="display: none;">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#control">
+                                <i class="bi bi-sliders me-2"></i>Control
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="#alerts">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Alerts
+                                <span class="alert-badge" id="alertBadge" style="display: none;">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4">
+                <!-- System Status Cards -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card metric-card">
+                            <div class="card-body text-center">
+                                <i class="bi bi-heart-pulse fs-1"></i>
+                                <h5 class="card-title mt-2">Motor Health</h5>
+                                <h2 class="display-6" id="overallHealthScore">--</h2>
+                                <small id="healthStatus">Calculating...</small>
+                                
+                                <!-- Enhanced Health Breakdown -->
+                                <div class="health-breakdown">
+                                    <div class="health-category">
+                                        <div class="health-category-value" id="electricalHealth">--</div>
+                                        <div class="health-category-label">Electrical</div>
+                                    </div>
+                                    <div class="health-category">
+                                        <div class="health-category-value" id="thermalHealth">--</div>
+                                        <div class="health-category-label">Thermal</div>
+                                    </div>
+                                    <div class="health-category">
+                                        <div class="health-category-value" id="mechanicalHealth">--</div>
+                                        <div class="health-category-label">Mechanical</div>
+                                    </div>
+                                    <div class="health-category">
+                                        <div class="health-category-value" id="predictiveHealth">--</div>
+                                        <div class="health-category-label">Predictive</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="bi bi-cpu fs-1"></i>
+                                <h5 class="card-title mt-2">ESP Status</h5>
+                                <h6 id="espStatus">Disconnected</h6>
+                                <small id="espLastSeen">--</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <i class="bi bi-hdd-network fs-1"></i>
+                                <h5 class="card-title mt-2">PLC Status</h5>
+                                <h6 id="plcStatus">Disconnected</h6>
+                                <small>D100, D102 Registers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body text-center">
+                                <i class="bi bi-robot fs-1"></i>
+                                <h5 class="card-title mt-2">AI Model</h5>
+                                <h6 id="aiStatus">Initializing</h6>
+                                <small>Predictive Analysis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overview Section -->
+                <section id="overview" class="mt-5">
+                    <h3 class="section-title">System Overview</h3>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-graph-up me-2"></i>Real-Time Motor Parameters</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="overviewChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-speedometer me-2"></i>Current Readings</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h6 class="text-muted mb-1">Motor RPM</h6>
+                                                <h4 id="currentRPM" class="text-primary">--</h4>
+                                                <small class="text-muted">Optimal: 2750</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h6 class="text-muted mb-1">Current (A)</h6>
+                                                <h4 id="currentAmp" class="text-success">--</h4>
+                                                <small class="text-muted">Optimal: 6.25A</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h6 class="text-muted mb-1">Voltage (V)</h6>
+                                                <h4 id="currentVolt" class="text-warning">--</h4>
+                                                <small class="text-muted">Optimal: 24V</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h6 class="text-muted mb-1">Power (kW)</h6>
+                                                <h4 id="currentPower" class="text-info">--</h4>
+                                                <small class="text-muted">Calculated</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="text-center p-3 border rounded">
+                                                <h6 class="text-muted mb-1">Motor Temperature</h6>
+                                                <h4 id="motorTemp" class="text-danger">--°C</h4>
+                                                <small class="text-muted">Optimal: <40°C</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Enhanced Health Analysis Section -->
+                <section id="health" class="mt-5">
+                    <h3 class="section-title">Comprehensive Health Analysis</h3>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-graph-down me-2"></i>Health Score Trends</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="healthChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-clipboard-data me-2"></i>Health Summary</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="healthSummary">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Analyzing...</span>
+                                            </div>
+                                            <p class="mt-2">Analyzing system health...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI Insights Section -->
+                <section id="ai-insights" class="mt-5">
+                    <h3 class="section-title">AI-Powered Insights & Recommendations</h3>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-robot me-2"></i>Smart Recommendations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recommendationsList">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Generating insights...</span>
+                                    </div>
+                                    <p class="mt-2">AI is analyzing system data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sensors Section -->
+                <section id="sensors" class="mt-5">
+                    <h3 class="section-title">Sensor Monitoring</h3>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-thermometer-half me-2"></i>Temperature Monitoring</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="temperatureChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-droplet me-2"></i>Environmental Conditions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="bi bi-thermometer text-danger fs-2"></i>
+                                                <h6 class="mt-2">Temperature</h6>
+                                                <h5 id="envTemp">-- °C</h5>
+                                                <small class="text-muted">Optimal: 24°C</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="bi bi-droplet-half text-primary fs-2"></i>
+                                                <h6 class="mt-2">Humidity</h6>
+                                                <h5 id="envHumidity">-- %</h5>
+                                                <small class="text-muted">Optimal: 40%</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="bi bi-thermometer-sun text-warning fs-2"></i>
+                                                <h6 class="mt-2">Heat Index</h6>
+                                                <h5 id="heatIndex">-- °C</h5>
+                                                <small class="text-muted">Calculated</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Power Analysis Section -->
+                <section id="power" class="mt-5">
+                    <h3 class="section-title">Power Analysis</h3>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-lightning me-2"></i>Power Consumption Trends</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="powerChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-calculator me-2"></i>Power Statistics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Efficiency Score</label>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar" id="efficiencyBar" style="width: 0%"></div>
+                                        </div>
+                                        <small id="efficiencyText">Calculating...</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Load Factor</label>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar bg-info" id="loadFactorBar" style="width: 0%"></div>
+                                        </div>
+                                        <small id="loadFactorText">--</small>
+                                    </div>
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <h6 class="text-muted">Peak Power</h6>
+                                            <h5 id="peakPower" class="text-danger">-- kW</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6 class="text-muted">Avg Power</h6>
+                                            <h5 id="avgPower" class="text-success">-- kW</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Control Section -->
+                <section id="control" class="mt-5">
+                    <h3 class="section-title">Motor Control</h3>
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-toggles me-2"></i>Relay Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <strong>Relay 1</strong><br>
+                                            <small class="text-muted">Current Protection</small>
+                                        </div>
+                                        <span class="relay-status" id="relay1Badge">OFF</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <strong>Relay 2</strong><br>
+                                            <small class="text-muted">Voltage Protection</small>
+                                        </div>
+                                        <span class="relay-status" id="relay2Badge">OFF</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Relay 3</strong><br>
+                                            <small class="text-muted">Temperature Protection</small>
+                                        </div>
+                                        <span class="relay-status" id="relay3Badge">OFF</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-gear me-2"></i>Manual Control</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <button class="btn btn-success control-button w-100" onclick="motorControl('start')">
+                                                <i class="bi bi-play-fill me-2"></i>Start Motor
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button class="btn btn-danger control-button w-100" onclick="motorControl('stop')">
+                                                <i class="bi bi-stop-fill me-2"></i>Stop Motor
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button class="btn btn-warning control-button w-100" onclick="motorControl('cooling_on')">
+                                                <i class="bi bi-wind me-2"></i>Enable Cooling
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button class="btn btn-info control-button w-100" onclick="motorControl('reset_alarms')">
+                                                <i class="bi bi-arrow-clockwise me-2"></i>Reset Alarms
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Manual controls are logged and may override automatic systems.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Enhanced Alerts Section -->
+                <section id="alerts" class="mt-5 mb-5">
+                    <h3 class="section-title">System Alerts & Notifications</h3>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-bell me-2"></i>Active Alerts</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="alertsList">
+                                <div class="text-center text-muted">
+                                    <i class="bi bi-check-circle fs-1"></i>
+                                    <p class="mt-2">No active alerts</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let socket;
+        let charts = {};
+        let sensorData = [];
+        let maxDataPoints = 50;
+        let updateInterval;
+        let recommendationCount = 0;
+        let alertCount = 0;
+
+        // Store latest health data globally
+        let latestHealthData = {
+            overall_health_score: 0,
+            electrical_health: 0,
+            thermal_health: 0,
+            mechanical_health: 0,
+            predictive_health: 0,
+            efficiency_score: 0,
+            status: 'No Data',
+            issues: {}
+        };
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSocket();
+            initializeCharts();
+            loadHistoricalData();
+            setInterval(updateCharts, 5000);
+            setInterval(loadMaintenanceAlerts, 30000);
+            setInterval(loadRecommendations, 20000);
+        });
+
+        // Enhanced Socket.IO initialization
+        function initializeSocket() {
+            socket = io();
+
+            socket.on('connect', function() {
+                updateConnectionStatus(true);
+                console.log('Connected to server');
+            });
+
+            socket.on('disconnect', function() {
+                updateConnectionStatus(false);
+                console.log('Disconnected from server');
+            });
+
+            socket.on('sensor_update', function(data) {
+                updateSensorData(data);
+                updateDisplays(data);
+            });
+
+            socket.on('status_update', function(status) {
+                updateSystemStatus(status);
+            });
+
+            socket.on('health_update', function(healthData) {
+                updateHealthDisplays(healthData);
+                latestHealthData = healthData;
+            });
+
+            socket.on('recommendations_update', function(recommendations) {
+                updateRecommendations(recommendations);
+            });
+
+            socket.on('maintenance_alert', function(alert) {
+                showAlert(alert);
+                loadMaintenanceAlerts();
+            });
+
+            socket.on('connection_lost', function(data) {
+                handleConnectionLoss(data);
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Overview Chart
+            const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+            charts.overview = new Chart(overviewCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Current (A)',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Voltage (V)',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'RPM',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            yAxisID: 'y2'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left' },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } },
+                        y2: { type: 'linear', display: false }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+
+            // Enhanced Health Chart
+            const healthCtx = document.getElementById('healthChart').getContext('2d');
+            charts.health = new Chart(healthCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Overall Health',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true
+                        },
+                        {
+                            label: 'Electrical Health',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                        },
+                        {
+                            label: 'Thermal Health',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                        },
+                        {
+                            label: 'Mechanical Health',
+                            data: [],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 100 } },
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+
+            // Temperature Chart
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            charts.temperature = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Motor Temp (°C)',
+                            data: [],
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)'
+                        },
+                        {
+                            label: 'Ambient Temp (°C)',
+                            data: [],
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+
+            // Power Chart
+            const powerCtx = document.getElementById('powerChart').getContext('2d');
+            charts.power = new Chart(powerCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Power Consumption (kW)',
+                        data: [],
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        // Update sensor data
+        function updateSensorData(data) {
+            const timestamp = moment().format('HH:mm:ss');
+            
+            // Add new data point
+            sensorData.push({
+                timestamp: timestamp,
+                ...data
+            });
+
+            // Keep only the last N data points
+            if (sensorData.length > maxDataPoints) {
+                sensorData.shift();
+            }
+
+            document.getElementById('lastUpdate').textContent = 
+                `Last Update: ${moment().format('HH:mm:ss')}`;
+        }
+
+        // Enhanced display updates with optimal value comparisons
+        function updateDisplays(data) {
+            // Current readings with optimal value highlighting
+            updateMetricWithOptimal('currentRPM', data.esp_rpm, 0, 2750);
+            updateMetricWithOptimal('currentAmp', data.esp_current, 1, 6.25);
+            updateMetricWithOptimal('currentVolt', data.esp_voltage, 1, 24);
+            updateMetricWithOptimal('motorTemp', data.plc_motor_temp, 1, 40, '°C', true); // true for higher is worse
+            
+            const power = data.esp_current && data.esp_voltage ? 
+                (data.esp_current * data.esp_voltage / 1000).toFixed(2) : '--';
+            document.getElementById('currentPower').textContent = power;
+
+            // Environmental conditions
+            updateMetricWithOptimal('envTemp', data.env_temp_c, 1, 24, '°C');
+            updateMetricWithOptimal('envHumidity', data.env_humidity, 1, 40, '%');
+            updateMetricDisplay('heatIndex', data.heat_index_c, 1, '°C');
+
+            // Relay status
+            updateRelayStatus('relay1Badge', data.relay1_status);
+            updateRelayStatus('relay2Badge', data.relay2_status);
+            updateRelayStatus('relay3Badge', data.relay3_status);
+        }
+
+        // New function to update metrics with optimal value comparison
+        function updateMetricWithOptimal(elementId, value, decimals, optimal, unit = '', higherIsWorse = false) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (value !== null && value !== undefined) {
+                const displayValue = decimals > 0 ? value.toFixed(decimals) : value.toString();
+                element.textContent = `${displayValue}${unit}`;
+                
+                // Color coding based on deviation from optimal
+                element.className = element.className.replace(/text-\w+/g, '');
+                
+                if (optimal) {
+                    let deviation;
+                    if (higherIsWorse) {
+                        deviation = (value - optimal) / optimal;
+                        if (deviation > 0.5) element.classList.add('text-danger');
+                        else if (deviation > 0.2) element.classList.add('text-warning');
+                        else element.classList.add('text-success');
+                    } else {
+                        deviation = Math.abs(value - optimal) / optimal;
+                        if (deviation < 0.1) element.classList.add('text-success');
+                        else if (deviation < 0.2) element.classList.add('text-warning');
+                        else element.classList.add('text-danger');
+                    }
+                }
+            } else {
+                element.textContent = `--${unit}`;
+                element.classList.add('data-unavailable');
+            }
+        }
+
+        function updateMetricDisplay(elementId, value, decimals, unit = '') {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (value !== null && value !== undefined) {
+                const displayValue = decimals > 0 ? value.toFixed(decimals) : value.toString();
+                element.textContent = `${displayValue}${unit}`;
+            } else {
+                element.textContent = `--${unit}`;
+                element.classList.add('data-unavailable');
+            }
+        }
+
+        // Enhanced health display update
+        function updateHealthDisplays(healthData) {
+            if (!healthData) return;
+
+            // Update main health score
+            const overallScore = healthData.overall_health_score || 0;
+            document.getElementById('overallHealthScore').textContent = overallScore;
+            document.getElementById('healthStatus').textContent = healthData.status || 'No Data';
+
+            // Update health categories
+            updateHealthCategory('electricalHealth', healthData.electrical_health);
+            updateHealthCategory('thermalHealth', healthData.thermal_health);
+            updateHealthCategory('mechanicalHealth', healthData.mechanical_health);
+            updateHealthCategory('predictiveHealth', healthData.predictive_health);
+
+            // Update health alert badge
+            const healthAlert = document.getElementById('healthAlertBadge');
+            if (overallScore < 75) {
+                healthAlert.style.display = 'inline-block';
+            } else {
+                healthAlert.style.display = 'none';
+            }
+
+            // Update health summary
+            updateHealthSummary(healthData);
+        }
+
+        function updateHealthCategory(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (value !== null && value !== undefined) {
+                element.textContent = Math.round(value);
+                
+                // Color coding
+                element.className = element.className.replace(/health-score-\w+/g, '');
+                if (value >= 90) element.classList.add('health-score-excellent');
+                else if (value >= 75) element.classList.add('health-score-good');
+                else if (value >= 60) element.classList.add('health-score-warning');
+                else element.classList.add('health-score-critical');
+            } else {
+                element.textContent = '--';
+            }
+        }
+
+        function updateHealthSummary(healthData) {
+            const summaryContainer = document.getElementById('healthSummary');
+            if (!healthData.issues) return;
+
+            let summaryHTML = '';
+            
+            // Check for issues in each category
+            const categories = ['electrical', 'thermal', 'mechanical', 'predictive'];
+            let hasIssues = false;
+
+            categories.forEach(category => {
+                const issues = healthData.issues[category];
+                if (issues && issues.length > 0) {
+                    hasIssues = true;
+                    const icon = getHealthIcon(category);
+                    const colorClass = getHealthColor(category);
+                    
+                    summaryHTML += `
+                        <div class="alert alert-${colorClass} py-2 mb-2">
+                            <strong><i class="${icon} me-1"></i>${category.charAt(0).toUpperCase() + category.slice(1)}:</strong><br>
+                            <small>${issues.slice(0, 1).join('; ')}</small>
+                        </div>`;
+                }
+            });
+
+            if (!hasIssues) {
+                summaryHTML = `
+                    <div class="text-center text-success">
+                        <i class="bi bi-check-circle-fill fs-2"></i>
+                        <p class="mt-2 mb-0">All systems healthy</p>
+                    </div>`;
+            }
+
+            summaryContainer.innerHTML = summaryHTML;
+        }
+
+        function getHealthIcon(category) {
+            const icons = {
+                'electrical': 'bi-lightning',
+                'thermal': 'bi-thermometer',
+                'mechanical': 'bi-gear',
+                'predictive': 'bi-graph-up-arrow'
+            };
+            return icons[category] || 'bi-info-circle';
+        }
+
+        function getHealthColor(category) {
+            const colors = {
+                'electrical': 'primary',
+                'thermal': 'danger',
+                'mechanical': 'warning',
+                'predictive': 'info'
+            };
+            return colors[category] || 'secondary';
+        }
+
+        // New recommendations update function
+        function updateRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsList');
+            const badge = document.getElementById('recAlertBadge');
+            
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-success">
+                        <i class="bi bi-check-circle-fill fs-1"></i>
+                        <p class="mt-3 fs-5">No recommendations</p>
+                        <p class="text-muted">System is operating optimally</p>
+                    </div>`;
+                badge.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            let highPriorityCount = 0;
+
+            recommendations.forEach(rec => {
+                if (rec.priority === 'CRITICAL' || rec.priority === 'HIGH') {
+                    highPriorityCount++;
+                }
+
+                const priorityClass = `rec-${rec.priority.toLowerCase()}`;
+                const icon = getRecommendationIcon(rec.category);
+                
+                html += `
+                    <div class="recommendation-card ${priorityClass}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <i class="${icon} me-2"></i>${rec.title || rec.type}
+                                    <span class="badge bg-${getPriorityColor(rec.priority)} ms-2">${rec.priority}</span>
+                                </h6>
+                                <p class="mb-2">${rec.description}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        Confidence: ${(rec.confidence * 100).toFixed(0)}%
+                                    </small>
+                                    <small class="text-muted">${rec.category}</small>
+                                </div>
+                                <div class="mt-2">
+                                    <strong>Action:</strong> ${rec.action}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            container.innerHTML = html;
+            
+            // Update badge
+            if (highPriorityCount > 0) {
+                badge.textContent = highPriorityCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function getRecommendationIcon(category) {
+            const icons = {
+                'System': 'bi-cpu',
+                'Health': 'bi-heart-pulse',
+                'Electrical': 'bi-lightning',
+                'Thermal': 'bi-thermometer',
+                'Mechanical': 'bi-gear',
+                'Performance': 'bi-speedometer2',
+                'Predictive': 'bi-robot'
+            };
+            return icons[category] || 'bi-info-circle';
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                'CRITICAL': 'danger',
+                'HIGH': 'warning',
+                'MEDIUM': 'info',
+                'LOW': 'secondary'
+            };
+            return colors[priority] || 'secondary';
+        }
+
+        // Update system status
+        function updateSystemStatus(status) {
+            // ESP Status
+            const espStatusElement = document.getElementById('espStatus');
+            const espCard = espStatusElement.closest('.card');
+            if (status.esp_connected) {
+                espStatusElement.textContent = 'Connected';
+                espCard.className = espCard.className.replace(/bg-\w+/, 'bg-success');
+            } else {
+                espStatusElement.textContent = 'Disconnected';
+                espCard.className = espCard.className.replace(/bg-\w+/, 'bg-danger');
+            }
+
+            // PLC Status
+            const plcStatusElement = document.getElementById('plcStatus');
+            const plcCard = plcStatusElement.closest('.card');
+            if (status.plc_connected) {
+                plcStatusElement.textContent = 'Connected';
+                plcCard.className = plcCard.className.replace(/bg-\w+/, 'bg-info');
+            } else {
+                plcStatusElement.textContent = 'Disconnected';
+                plcCard.className = plcCard.className.replace(/bg-\w+/, 'bg-danger');
+            }
+
+            // AI Status
+            document.getElementById('aiStatus').textContent = status.ai_model_status;
+
+            // Update connection indicator
+            updateConnectionStatus(status.esp_connected || status.plc_connected);
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('connectionStatus');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                indicator.className = 'status-indicator status-connected';
+                text.textContent = 'Connected';
+            } else {
+                indicator.className = 'status-indicator status-disconnected';
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        // Update relay status display
+        function updateRelayStatus(elementId, status) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (status === 'ON') {
+                element.textContent = 'ON';
+                element.className = 'relay-status relay-on';
+            } else if (status === 'OFF') {
+                element.textContent = 'OFF';
+                element.className = 'relay-status relay-off';
+            } else {
+                element.textContent = '--';
+                element.className = 'relay-status relay-unknown';
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            if (sensorData.length === 0) return;
+
+            const labels = sensorData.map(d => d.timestamp);
+
+            // Overview chart
+            charts.overview.data.labels = labels;
+            charts.overview.data.datasets[0].data = sensorData.map(d => d.esp_current || 0);
+            charts.overview.data.datasets[1].data = sensorData.map(d => d.esp_voltage || 0);
+            charts.overview.data.datasets[2].data = sensorData.map(d => d.esp_rpm || 0);
+            charts.overview.update('none');
+
+            // Health chart
+            if (charts.health) {
+                charts.health.data.labels = labels;
+                charts.health.data.datasets[0].data = sensorData.map(d => d.overall_health_score || 0);
+                charts.health.data.datasets[1].data = sensorData.map(d => d.electrical_health || 0);
+                charts.health.data.datasets[2].data = sensorData.map(d => d.thermal_health || 0);
+                charts.health.data.datasets[3].data = sensorData.map(d => d.mechanical_health || 0);
+                charts.health.update('none');
+            }
+
+            // Temperature chart
+            charts.temperature.data.labels = labels;
+            charts.temperature.data.datasets[0].data = sensorData.map(d => d.plc_motor_temp || 0);
+            charts.temperature.data.datasets[1].data = sensorData.map(d => d.env_temp_c || 0);
+            charts.temperature.update('none');
+
+            // Power chart
+            charts.power.data.labels = labels;
+            charts.power.data.datasets[0].data = sensorData.map(d => 
+                d.esp_current && d.esp_voltage ? (d.esp_current * d.esp_voltage / 1000) : 0
+            );
+            charts.power.update('none');
+
+            // Update power statistics
+            updatePowerStatistics();
+        }
+
+        function updatePowerStatistics() {
+            const powerData = sensorData.map(d => 
+                d.esp_current && d.esp_voltage ? (d.esp_current * d.esp_voltage / 1000) : 0
+            ).filter(p => p > 0);
+
+            if (powerData.length > 0) {
+                const maxPower = Math.max(...powerData);
+                const avgPower = powerData.reduce((a, b) => a + b, 0) / powerData.length;
+                
+                document.getElementById('peakPower').textContent = `${maxPower.toFixed(2)} kW`;
+                document.getElementById('avgPower').textContent = `${avgPower.toFixed(2)} kW`;
+
+                // Efficiency from latest health data
+                if (latestHealthData.efficiency_score) {
+                    const efficiency = latestHealthData.efficiency_score;
+                    document.getElementById('efficiencyBar').style.width = `${efficiency}%`;
+                    document.getElementById('efficiencyText').textContent = `${efficiency}%`;
+                }
+
+                // Load factor calculation
+                const loadFactor = (avgPower / maxPower) * 100;
+                document.getElementById('loadFactorBar').style.width = `${loadFactor}%`;
+                document.getElementById('loadFactorText').textContent = `${loadFactor.toFixed(1)}%`;
+            }
+        }
+
+        // Load functions
+        function loadRecommendations() {
+            fetch('/api/recommendations')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.recommendations) {
+                        updateRecommendations(data.recommendations);
+                    }
+                })
+                .catch(error => console.error('Error loading recommendations:', error));
+        }
+
+        function loadHistoricalData() {
+            fetch('/api/historical-data?hours=1')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data && data.data.length > 0) {
+                        sensorData = data.data.slice(-maxDataPoints).map(d => ({
+                            timestamp: moment(d.timestamp).format('HH:mm:ss'),
+                            esp_current: d.current,
+                            esp_voltage: d.voltage,
+                            esp_rpm: d.rpm,
+                            plc_motor_temp: d.motor_temp,
+                            env_temp_c: d.env_temp,
+                            env_humidity: d.humidity,
+                            overall_health_score: d.overall_health_score,
+                            electrical_health: d.electrical_health,
+                            thermal_health: d.thermal_health,
+                            mechanical_health: d.mechanical_health,
+                            predictive_health: d.predictive_health,
+                            efficiency_score: d.efficiency_score,
+                            power: d.power
+                        }));
+                        updateCharts();
+                    }
+                })
+                .catch(error => console.error('Error loading historical data:', error));
+        }
+
+        function loadMaintenanceAlerts() {
+            fetch('/api/maintenance-alerts')
+                .then(response => response.json())
+                .then(data => {
+                    const alertsList = document.getElementById('alertsList');
+                    const alertBadge = document.getElementById('alertBadge');
+                    
+                    if (data.alerts && data.alerts.length > 0) {
+                        alertsList.innerHTML = '';
+                        let highPriorityCount = 0;
+
+                        data.alerts.forEach(alert => {
+                            if (alert.severity === 'CRITICAL' || alert.priority === 'HIGH') {
+                                highPriorityCount++;
+                            }
+
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = `alert-item alert-${alert.severity.toLowerCase()}`;
+                            alertDiv.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">${alert.type}</h6>
+                                        <p class="mb-1">${alert.description}</p>
+                                        <small class="text-muted">
+                                            ${moment(alert.timestamp).format('MM/DD/YYYY HH:mm:ss')} 
+                                            | Confidence: ${(alert.confidence * 100).toFixed(0)}%
+                                        </small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="acknowledgeAlert(${alert.id})">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </div>
+                            `;
+                            alertsList.appendChild(alertDiv);
+                        });
+
+                        // Update alert badge
+                        if (highPriorityCount > 0) {
+                            alertBadge.textContent = highPriorityCount;
+                            alertBadge.style.display = 'inline-block';
+                        } else {
+                            alertBadge.style.display = 'none';
+                        }
+                    } else {
+                        alertsList.innerHTML = `
+                            <div class="text-center text-muted">
+                                <i class="bi bi-check-circle fs-1"></i>
+                                <p class="mt-2">No active alerts</p>
+                            </div>
+                        `;
+                        alertBadge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error loading alerts:', error));
+        }
+
+        // Handle connection loss
+        function handleConnectionLoss(data) {
+            console.log('Connection lost:', data);
+            
+            showToast(`${data.component} disconnected: ${data.message}`, 'error');
+            
+            if (data.component === 'ESP') {
+                // Clear ESP readings
+                ['currentRPM', 'currentAmp', 'currentVolt', 'currentPower', 
+                 'envTemp', 'envHumidity', 'heatIndex'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = '--';
+                        element.classList.add('data-unavailable');
+                    }
+                });
+
+                // Update relay status to unknown
+                ['relay1Badge', 'relay2Badge', 'relay3Badge'].forEach(id => {
+                    updateRelayStatus(id, 'UNKNOWN');
+                });
+            }
+            
+            updateConnectionStatus(false);
+        }
+
+        // Utility functions
+        function acknowledgeAlert(alertId) {
+            fetch(`/api/acknowledge-alert/${alertId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast('Alert acknowledged', 'success');
+                        loadMaintenanceAlerts();
+                    }
+                })
+                .catch(error => console.error('Error acknowledging alert:', error));
+        }
+
+        function motorControl(command) {
+            fetch('/api/motor-control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(`Command "${command}" executed successfully`, 'success');
+                } else {
+                    showToast(`Error executing command: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending control command:', error);
+                showToast('Error sending control command', 'error');
+            });
+        }
+
+        // Simple toast notification
+        function showToast(message, type) {
+            const toastContainer = document.createElement('div');
+            toastContainer.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                background: ${type === 'success' ? '#059669' : '#dc2626'};
+                color: white; padding: 15px 20px; border-radius: 5px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            `;
+            toastContainer.textContent = message;
+            document.body.appendChild(toastContainer);
+
+            setTimeout(() => {
+                document.body.removeChild(toastContainer);
+            }, 3000);
+        }
+
+        function showAlert(alert) {
+            showToast(`${alert.type}: ${alert.message}`, alert.severity.toLowerCase());
+        }
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.sidebar .nav-link').forEach(l => 
+                    l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Scroll to section
+                const target = this.getAttribute('href').substring(1);
+                const section = document.getElementById(target);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Auto-request updates
+        function requestUpdate() {
+            if (socket) {
+                socket.emit('request_update');
+            }
+        }
+
+        setInterval(requestUpdate, 10000);
+    </script>
+</body>
+</html>
