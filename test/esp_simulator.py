@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ESP/Arduino Data Simulator
-Sends fake sensor data to the motor monitoring system
+ESP/Arduino Data Simulator - Standalone Version
+Sends realistic fake sensor data to the motor monitoring system
 """
 
 import time
@@ -10,9 +10,12 @@ import requests
 import json
 import logging
 from datetime import datetime
-from typing import Dict
 
-logging.basicConfig(level=logging.INFO)
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class ESPSimulator:
@@ -20,7 +23,7 @@ class ESPSimulator:
         self.server_url = server_url
         self.endpoint = f"{server_url}/send-data"
         
-        # Target optimal values with some realistic variation
+        # Target optimal values with realistic variation
         self.base_values = {
             'voltage': 24.0,      # 24V ±2V
             'current': 6.25,      # 6.25A ±1.5A
@@ -29,9 +32,11 @@ class ESPSimulator:
             'humidity': 45.0,     # 45% ±15%
         }
         
-        logger.info(f"ESP Simulator initialized for {self.endpoint}")
+        print(f"🔌 ESP Simulator initialized")
+        print(f"🌐 Target server: {self.endpoint}")
+        print(f"📊 Base values: 24V, 6.25A, 2650 RPM, 26°C, 45%RH")
     
-    def generate_sensor_data(self) -> Dict[str, str]:
+    def generate_sensor_data(self):
         """Generate realistic sensor data with random variations"""
         
         # Add realistic variations
@@ -44,7 +49,7 @@ class ESPSimulator:
         # Convert temperature to Fahrenheit
         temp_f = (temp_c * 9/5) + 32
         
-        # Calculate heat index (simplified approximation)
+        # Calculate heat index (simplified)
         heat_index_c = temp_c + (0.01 * humidity * (temp_c - 14.55))
         heat_index_f = (heat_index_c * 9/5) + 32
         
@@ -78,39 +83,56 @@ class ESPSimulator:
         
         return data
     
-    def send_data(self, data: Dict[str, str]) -> bool:
+    def send_data(self, data):
         """Send data to the monitoring system"""
         try:
             response = requests.post(
                 self.endpoint,
                 json=data,
                 headers={'Content-Type': 'application/json'},
-                timeout=5
+                timeout=10
             )
             
             if response.status_code == 200:
-                logger.info(f"✅ Data sent: V={data['VAL2']}V, I={data['VAL1']}A, RPM={data['VAL3']}")
+                print(f"✅ Data sent: V={data['VAL2']}V, I={data['VAL1']}A, RPM={data['VAL3']}, T={data['VAL4']}°C")
                 return True
             else:
-                logger.error(f"❌ Server error: {response.status_code} - {response.text}")
+                print(f"❌ Server error: {response.status_code} - {response.text}")
                 return False
                 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Connection error: {e}")
+        except requests.exceptions.ConnectionError:
+            print(f"❌ Connection error: Cannot reach {self.server_url}")
+            return False
+        except requests.exceptions.Timeout:
+            print(f"❌ Timeout: Server not responding")
+            return False
+        except Exception as e:
+            print(f"❌ Error: {e}")
             return False
     
-    def run_simulation(self, interval: int = 5, duration: int = 300):
-        """Run continuous simulation
+    def test_single_send(self):
+        """Test sending a single data packet"""
+        print("🧪 Testing single data send...")
+        sensor_data = self.generate_sensor_data()
+        success = self.send_data(sensor_data)
         
-        Args:
-            interval: Time between data sends (seconds)
-            duration: Total simulation time (seconds, 0 for infinite)
-        """
-        logger.info(f"🚀 Starting ESP simulation (interval={interval}s)")
-        logger.info("📊 Target values: 24V, 6.25A, 2650 RPM, 26°C, 45% humidity")
+        if success:
+            print("✅ Single test successful!")
+            return True
+        else:
+            print("❌ Single test failed!")
+            return False
+    
+    def run_simulation(self, interval=5, duration=300):
+        """Run continuous simulation"""
+        print(f"🚀 Starting ESP simulation")
+        print(f"⏱️  Interval: {interval}s, Duration: {duration}s")
+        print("Press Ctrl+C to stop early")
+        print("-" * 50)
         
         start_time = time.time()
         count = 0
+        success_count = 0
         
         try:
             while True:
@@ -119,40 +141,75 @@ class ESPSimulator:
                 success = self.send_data(sensor_data)
                 
                 count += 1
-                elapsed = time.time() - start_time
-                
                 if success:
-                    logger.info(f"📈 Packet {count} sent successfully (elapsed: {elapsed:.1f}s)")
+                    success_count += 1
+                
+                elapsed = time.time() - start_time
+                print(f"📈 Packet {count} | Success: {success_count}/{count} | Elapsed: {elapsed:.1f}s")
                 
                 # Check if duration exceeded
                 if duration > 0 and elapsed >= duration:
-                    logger.info(f"⏰ Simulation completed ({duration}s)")
+                    print(f"⏰ Simulation completed ({duration}s)")
                     break
                 
                 # Wait for next interval
                 time.sleep(interval)
                 
         except KeyboardInterrupt:
-            logger.info("🛑 Simulation stopped by user")
+            print("\n🛑 Simulation stopped by user")
         except Exception as e:
-            logger.error(f"💥 Simulation error: {e}")
+            print(f"💥 Simulation error: {e}")
+        
+        elapsed = time.time() - start_time
+        success_rate = (success_count / count) * 100 if count > 0 else 0
+        
+        print("-" * 50)
+        print(f"📊 Summary:")
+        print(f"   Total packets: {count}")
+        print(f"   Successful: {success_count}")
+        print(f"   Success rate: {success_rate:.1f}%")
+        print(f"   Duration: {elapsed:.1f}s")
 
 def main():
-    """Main function for standalone execution"""
-    import argparse
+    import sys
     
-    parser = argparse.ArgumentParser(description='ESP Data Simulator')
-    parser.add_argument('--server', default='http://localhost:5000', 
-                       help='Server URL (default: http://localhost:5000)')
-    parser.add_argument('--interval', type=int, default=5, 
-                       help='Data send interval in seconds (default: 5)')
-    parser.add_argument('--duration', type=int, default=0, 
-                       help='Simulation duration in seconds (0 for infinite, default: 0)')
+    # Parse command line arguments manually (no argparse dependency)
+    server_url = "http://localhost:5000"
+    interval = 5
+    duration = 300
+    test_only = False
     
-    args = parser.parse_args()
+    # Simple argument parsing
+    for i, arg in enumerate(sys.argv):
+        if arg == "--server" and i + 1 < len(sys.argv):
+            server_url = sys.argv[i + 1]
+        elif arg == "--interval" and i + 1 < len(sys.argv):
+            interval = int(sys.argv[i + 1])
+        elif arg == "--duration" and i + 1 < len(sys.argv):
+            duration = int(sys.argv[i + 1])
+        elif arg == "--test-only":
+            test_only = True
+        elif arg == "--help":
+            print("ESP Simulator - Usage:")
+            print("  python esp_simulator.py [options]")
+            print("Options:")
+            print("  --server URL       Server URL (default: http://localhost:5000)")
+            print("  --interval SEC     Send interval in seconds (default: 5)")
+            print("  --duration SEC     Duration in seconds (default: 300)")
+            print("  --test-only        Send only one test packet")
+            print("  --help             Show this help")
+            return
     
-    simulator = ESPSimulator(args.server)
-    simulator.run_simulation(args.interval, args.duration)
+    print("=" * 60)
+    print("🔌 ESP/ARDUINO DATA SIMULATOR")
+    print("=" * 60)
+    
+    simulator = ESPSimulator(server_url)
+    
+    if test_only:
+        simulator.test_single_send()
+    else:
+        simulator.run_simulation(interval, duration)
 
 if __name__ == "__main__":
     main()
