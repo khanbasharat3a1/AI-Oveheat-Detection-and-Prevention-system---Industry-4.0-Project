@@ -108,8 +108,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/ai-motor-monitoring.git
-cd ai-motor-monitoring
+git clone https://github.com/khanbasharat3a1/AI-Oveheat-Detection-and-Prevention-system---Industry-4.0-Project
 
 # Create virtual environment
 python -m venv venv
