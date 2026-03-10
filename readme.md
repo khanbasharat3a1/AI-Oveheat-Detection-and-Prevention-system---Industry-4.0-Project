@@ -1,23 +1,23 @@
-# 🔧 AI-Enabled Industrial Motor Health Monitoring System
+
+# Industrial Motor Health Monitoring System
 
 <div align="center">
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.3.2-green.svg)](https://flask.palletsprojects.com/)
 [![Industrial IoT](https://img.shields.io/badge/Industrial-IoT-orange.svg)](https://github.com/your-repo)
-[![AI Powered](https://img.shields.io/badge/AI-Powered-purple.svg)](https://github.com/your-repo)
 
-*A comprehensive, AI-powered motor health monitoring system with real-time data acquisition, predictive analytics, and intelligent maintenance recommendations.*
+*Real-time motor health monitoring with predictive analytics and automated maintenance recommendations.*
 
 </div>
 
 ---
 
-## 📸 System Dashboard Screenshots
+## Screenshots
 
 <div align="center">
-  
-### Main Dashboard View
+
+### Main Dashboard
 <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgvjsT9ClM9sKrEEpc1RV1FcrwQmAAM2vxTVB-tFJPj6nYaG86llgIQtPW34E8hNKOBy9jAUY3PCZXwK0BNELbUZin5cTilecizLhun6esQeG_edg0tW0XRYNFBnAvkxnOG29xV0BF36NYmHJEKrcLFFx7x_o3cU6uDgRk4h048dFMiEpUMhUoE22929mA" alt="Main Dashboard" width="800"/>
 
 ### Real-time Analytics
@@ -26,331 +26,231 @@
 ### System Monitoring
 <img src="https://blogger.googleusercontent.com/img/a/AVvXsEib7kZWyCOO7gIANKxDg_RRMx1jJ8Kh8fgF22Socs6-GeajofweaHnWcZEtp2QhRQWsyLEoaPbTWYSICTYme9lydCLIxHnmZWuEb2DW29zB8c6eomM2nCM7t-Vvmf453xX9JJQSp_hGREEmZUz75AbFi6mDQhCRUfSHdGAKG4nbx6z0KZ04EnzxIdMSd1w" alt="Monitoring View" width="800"/>
 
-### Health Analysis Dashboard
+### Health Analysis
 <img src="https://blogger.googleusercontent.com/img/a/AVvXsEiHqq3dkyo0jZEfUbiJCHIyHUWjvclXyIvykvDE00_aPprAsG_Tp-mA7Ek8pVQT5Ta27lYdtXbpvt07u8xiaQ2LV423C7o6kB5Nxc2r2KRXDry08MeRKQk-jw0DDhNdtAT5tVLcuH7kajthhkY9IYxRQDjfIuYcWKdfBRQooDmjYu0LqY5TIbVQvhy76dM" alt="Health Analysis" width="800"/>
 
 </div>
 
 ---
 
-## ✨ Key Features
+## Features
 
-### 🤖 AI-Powered Health Analysis
-- **4-Category Health Assessment**: Electrical, Thermal, Mechanical, Predictive
-- **Real-time Anomaly Detection** using Isolation Forest algorithms
-- **Predictive Maintenance** with confidence scoring
-- **Smart Recommendations** based on operational patterns
+**Health Analysis** — Four-category scoring (Electrical, Thermal, Mechanical, Predictive) using Isolation Forest anomaly detection with confidence-scored maintenance recommendations.
 
-### 📡 Multi-Source Data Integration
-- **ESP32/Arduino** sensor data via WiFi (Current, Voltage, RPM, Environment)
-- **FX5U PLC** communication via MC Protocol (Motor temperature, Voltage)
-- **Real-time WebSocket** updates for live dashboard
-- **CSV Export** for external analysis
+**Data Sources** — ESP32/Arduino sensors over WiFi (current, voltage, RPM, environment) and FX5U PLC via MC Protocol (motor temperature, voltage), with live WebSocket updates and CSV export.
 
-### 📊 Comprehensive Monitoring
-- **Motor Parameters**: 24V DC motor optimized thresholds
-- **Environmental Conditions**: Temperature, Humidity, Heat Index
-- **Relay Status Monitoring**: 3-channel protection relays
-- **Connection Health**: Automatic timeout detection and alerts
+**Monitored Parameters**
 
-### 🎯 Optimal Value Targeting
-| Parameter | Optimal Range | Critical Limits |
-|-----------|--------------|-----------------|
+| Parameter | Optimal | Critical |
+|-----------|---------|----------|
 | Motor Temperature | < 40°C | > 60°C |
 | System Voltage | 24V ± 10% | < 20V or > 28V |
 | Motor Current | 6.25A | > 12A |
-| Motor Speed | 2750 RPM | ± 150 RPM |
+| Motor Speed | 2750 RPM | ±150 RPM |
 | Environment | 24°C, 40% RH | > 40°C, > 70% RH |
 
 ---
 
-## 🏗️ System Architecture
+## Project Structure
 
 ```
-📁 ai-motor-monitoring/
-├── 📄 main.py                    # Application entry point
-├── ⚙️ config.py                  # System configuration
-├── 📦 requirements.txt           # Dependencies
-├── 🔐 .env                       # Environment variables
-│
-├── 🔌 hardware/                  # Hardware communication
-│   ├── esp_handler.py           # ESP/Arduino interface
-│   └── plc_manager.py           # FX5U PLC MC protocol
-│
-├── 🧠 ai/                        # AI & Analytics
-│   └── health_analyzer.py       # Health analysis & recommendations
-│
-├── 💾 database/                  # Data management
-│   ├── models.py                # SQLAlchemy models
-│   └── manager.py               # Database operations
-│
-├── 🌐 api/                       # Web API
-│   └── routes.py                # REST endpoints & WebSocket
-│
-├── 🧪 tests/                     # Test scripts
-│   ├── esp_simulator.py         # ESP data simulator
-│   ├── plc_simulator.py         # PLC data simulator
-│   └── run_tests.py             # Test runner
-│
-├── 🎨 templates/                 # Web interface
-│   └── dashboard.html           # Main dashboard
-│
-└── 📊 data/                      # Data storage
-    ├── sensor_data.csv          # CSV exports
-    └── motor_monitoring.db      # SQLite database
+ai-motor-monitoring/
+├── main.py
+├── config.py
+├── requirements.txt
+├── .env
+├── hardware/
+│   ├── esp_handler.py
+│   └── plc_manager.py
+├── ai/
+│   └── health_analyzer.py
+├── database/
+│   ├── models.py
+│   └── manager.py
+├── api/
+│   └── routes.py
+├── tests/
+│   ├── esp_simulator.py
+│   ├── plc_simulator.py
+│   └── run_tests.py
+├── templates/
+│   └── dashboard.html
+└── data/
+    ├── sensor_data.csv
+    └── motor_monitoring.db
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## Setup
 
-### 1️⃣ Installation
+### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/your-repo/ai-motor-monitoring.git
 cd ai-motor-monitoring
 
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
-
-# Create required directories
 mkdir -p data logs tests templates static
 ```
 
-### 2️⃣ Configuration
+### Configuration
 
-Create `.env` file in the project root:
+Create a `.env` file in the project root:
 
 ```env
-# PLC Configuration
 PLC_IP=192.168.3.39
 PLC_PORT=5007
-
-# Flask Configuration  
 FLASK_HOST=0.0.0.0
 FLASK_PORT=5000
 DEBUG=True
-
-# Database
 DATABASE_URL=sqlite:///data/motor_monitoring.db
 ```
 
-### 3️⃣ Hardware Setup
+### Hardware
 
-#### 🔧 FX5U PLC Configuration
-1. Enable MC Protocol on Ethernet module
-2. Set IP: `192.168.3.39` (or update `.env`)
-3. Port: `5007`
-4. Configure `D100` for voltage monitoring
-5. Configure `D102` for temperature monitoring
+**FX5U PLC** — Enable MC Protocol on the Ethernet module, set IP to `192.168.3.39`, port `5007`. Use `D100` for voltage and `D102` for temperature.
 
-#### 📡 ESP32/Arduino Network
-1. Connect to WiFi network
-2. Configure server IP in ESP code
-3. Send data to: `http://your-server:5000/send-data`
-4. JSON format with `VAL1-VAL12` fields
+**ESP32/Arduino** — Connect to the same WiFi network and point the device to `http://your-server:5000/send-data` using the JSON format below.
 
-### 4️⃣ Run the System
+### Start
 
 ```bash
-# Start the main application
 python main.py
-
-# Access dashboard at: http://localhost:5000
+# Dashboard at http://localhost:5000
 ```
 
 ---
 
-## 🧪 Testing Suite
+## Testing
 
-### Simulate ESP Data
 ```bash
-# Start ESP simulator (sends data every 5 seconds)
+# ESP simulator (default: every 5 seconds)
 python tests/esp_simulator.py --interval 5
-
-# Custom server and duration
 python tests/esp_simulator.py --server http://192.168.1.100:5000 --duration 300
-```
 
-### Simulate PLC Data
-```bash
-# Start PLC simulator (writes every 10 seconds)
+# PLC simulator
 python tests/plc_simulator.py --ip 192.168.3.39 --interval 10
-
-# Test connection only
 python tests/plc_simulator.py --test-only
-```
 
-### Run Combined Tests
-```bash
-# Run both simulators for 5 minutes
+# Combined
 python tests/run_tests.py --duration 300
-
-# Full system test
 python tests/run_tests.py --duration 3600 --server http://localhost:5000
 ```
 
-### 📈 Expected Test Values
-- **Voltage**: ~24V (22V-26V range)
-- **Current**: ~6.25A (4A-9A range)  
-- **RPM**: ~2650 (2400-2900 range)
-- **Motor Temperature**: ~28°C (23°C-43°C range)
-- **Environment**: ~26°C, ~45% humidity
+Expected ranges: voltage ~24V, current ~6.25A, RPM ~2650, motor temp ~28°C, humidity ~45%.
 
 ---
 
-## 📡 API Documentation
+## API Reference
 
-### REST Endpoints
+### REST
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/` | GET | Main dashboard |
-| `/send-data` | POST | Receive ESP sensor data |
-| `/api/current-data` | GET | Current readings & health |
-| `/api/health-details` | GET | Detailed health breakdown |
-| `/api/recommendations` | GET | AI recommendations |
-| `/api/historical-data` | GET | Historical data for charts |
-| `/api/maintenance-alerts` | GET | Active maintenance alerts |
-| `/api/acknowledge-alert/<id>` | POST | Acknowledge alert |
-| `/api/motor-control` | POST | Motor control commands |
-| `/api/system-status` | GET | Complete system status |
+| `/` | GET | Dashboard |
+| `/send-data` | POST | Ingest ESP sensor data |
+| `/api/current-data` | GET | Live readings and health score |
+| `/api/health-details` | GET | Per-category health breakdown |
+| `/api/recommendations` | GET | Maintenance recommendations |
+| `/api/historical-data` | GET | Historical chart data |
+| `/api/maintenance-alerts` | GET | Active alerts |
+| `/api/acknowledge-alert/<id>` | POST | Acknowledge an alert |
+| `/api/motor-control` | POST | Send control commands |
+| `/api/system-status` | GET | Full system status |
 
 ### WebSocket Events
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| `connect` | Client → Server | Client connection |
-| `sensor_update` | Server → Client | Real-time sensor data |
-| `health_update` | Server → Client | Health score updates |
+| `connect` | Client → Server | Establish connection |
+| `sensor_update` | Server → Client | Live sensor readings |
+| `health_update` | Server → Client | Health score changes |
 | `recommendations_update` | Server → Client | New recommendations |
 | `maintenance_alert` | Server → Client | Critical alerts |
 | `connection_lost` | Server → Client | Hardware disconnection |
-| `status_update` | Server → Client | System status changes |
-| `request_update` | Client → Server | Manual update request |
+| `status_update` | Server → Client | System state changes |
+| `request_update` | Client → Server | Manual refresh |
 
-### ESP Data Format
+### ESP Payload Format
 
 ```json
 {
   "TYPE": "ADU_TEXT",
-  "VAL1": "6.25",     // Current (A)
-  "VAL2": "24.0",     // Voltage (V)
-  "VAL3": "2650",     // RPM
-  "VAL4": "26.0",     // Temperature (°C)
-  "VAL5": "45.0",     // Humidity (%)
-  "VAL6": "78.8",     // Temperature (°F)
-  "VAL7": "27.2",     // Heat Index (°C)
-  "VAL8": "81.0",     // Heat Index (°F)
-  "VAL9": "OFF",      // Relay 1 Status
-  "VAL10": "OFF",     // Relay 2 Status
-  "VAL11": "OFF",     // Relay 3 Status
-  "VAL12": "NOR"      // Combined Status
+  "VAL1": "6.25",
+  "VAL2": "24.0",
+  "VAL3": "2650",
+  "VAL4": "26.0",
+  "VAL5": "45.0",
+  "VAL6": "78.8",
+  "VAL7": "27.2",
+  "VAL8": "81.0",
+  "VAL9": "OFF",
+  "VAL10": "OFF",
+  "VAL11": "OFF",
+  "VAL12": "NOR"
 }
 ```
 
----
-
-## 🏥 Health Analysis System
-
-### Health Categories
-
-| Category | Weight | Description | Key Factors |
-|----------|--------|-------------|-------------|
-| **Electrical** | 30% | Voltage, Current Analysis | Under/overvoltage, overcurrent, underload |
-| **Thermal** | 35% | Temperature Management | Motor temp, ambient conditions, humidity |
-| **Mechanical** | 25% | Mechanical Performance | RPM deviations, load balance, vibration |
-| **Predictive** | 10% | Trend Analysis | Temperature trends, current stability, degradation |
-
-### Health Score Ranges
-
-| Score | Status | Description | Action |
-|-------|--------|-------------|--------|
-| **90-100** | 🟢 Excellent | Optimal performance | Continue monitoring |
-| **75-89** | 🟡 Good | Normal operation | Routine maintenance |
-| **60-74** | 🟠 Warning | Attention needed | Schedule inspection |
-| **0-59** | 🔴 Critical | Immediate action required | Stop operation |
-
-### AI Recommendations
-- **Connection Alerts**: Hardware communication issues
-- **Performance Optimization**: Load balancing suggestions
-- **Maintenance Scheduling**: Predictive maintenance timing
-- **Safety Warnings**: Critical condition alerts
-- **Efficiency Improvements**: Energy optimization tips
+Fields: VAL1 current (A), VAL2 voltage (V), VAL3 RPM, VAL4 temperature (°C), VAL5 humidity (%), VAL6 temperature (°F), VAL7–8 heat index, VAL9–11 relay status, VAL12 combined status.
 
 ---
 
-## 💾 Data Management
+## Health Scoring
 
-### Database Schema
-- **sensor_data**: Real-time sensor readings with health scores
-- **maintenance_log**: Alerts and recommendations with confidence levels
-- **system_events**: System operations and manual commands
+| Category | Weight | Factors |
+|----------|--------|---------|
+| Electrical | 30% | Voltage, current, over/underload |
+| Thermal | 35% | Motor temp, ambient conditions, humidity |
+| Mechanical | 25% | RPM deviation, load balance |
+| Predictive | 10% | Temperature trends, current stability |
 
-### CSV Export Features
-- Timestamp with all sensor readings
-- Calculated health scores (4 categories + overall)
-- Power consumption and efficiency metrics
-- Relay status and system state
-- Automatic hourly/daily exports
+| Score | Status | Action |
+|-------|--------|--------|
+| 90–100 | Excellent | Continue monitoring |
+| 75–89 | Good | Routine maintenance |
+| 60–74 | Warning | Schedule inspection |
+| 0–59 | Critical | Stop operation |
 
 ---
 
-## ⚙️ Configuration Options
+## Configuration Reference
 
-### Motor Thresholds
-
-Edit `config.py` to customize thresholds:
+Edit `config.py` to adjust thresholds:
 
 ```python
-# Motor Temperature
 MOTOR_TEMP_CRITICAL = 60.0      # °C
-MOTOR_TEMP_WARNING = 50.0       # °C  
-MOTOR_TEMP_OPTIMAL = 40.0       # °C
+MOTOR_TEMP_WARNING  = 50.0      # °C
+MOTOR_TEMP_OPTIMAL  = 40.0      # °C
 
-# Voltage (24V System)
 VOLTAGE_MIN_CRITICAL = 20.0     # V
 VOLTAGE_MAX_CRITICAL = 28.0     # V
 
-# Current  
-CURRENT_OPTIMAL = 6.25          # A
-CURRENT_MAX_WARNING = 9.0       # A
+CURRENT_OPTIMAL      = 6.25     # A
+CURRENT_MAX_WARNING  = 9.0      # A
 CURRENT_MAX_CRITICAL = 12.0     # A
 
-# RPM
-RPM_OPTIMAL = 2750              # RPM
-RPM_MIN_WARNING = 2600          # RPM
-RPM_MAX_WARNING = 2900          # RPM
-```
+RPM_OPTIMAL      = 2750         # RPM
+RPM_MIN_WARNING  = 2600         # RPM
+RPM_MAX_WARNING  = 2900         # RPM
 
-### Connection Timeouts
-
-```python
-ESP_TIMEOUT = 30                # seconds
-PLC_TIMEOUT = 60                # seconds  
-DATA_CLEANUP_INTERVAL = 10      # seconds
+ESP_TIMEOUT             = 30    # seconds
+PLC_TIMEOUT             = 60    # seconds
+DATA_CLEANUP_INTERVAL   = 10    # seconds
 ```
 
 ---
 
-## 🔧 Troubleshooting
-
-### Common Issues & Solutions
+## Troubleshooting
 
 <details>
-<summary><b>📡 ESP Connection Problems</b></summary>
+<summary><b>ESP not sending data</b></summary>
 
-Check network connectivity:
-```bash
-ping 192.168.1.100
-```
+Verify network reachability and test the endpoint manually:
 
-Verify ESP is sending data:
 ```bash
 curl -X POST http://localhost:5000/send-data \
   -H "Content-Type: application/json" \
@@ -359,25 +259,20 @@ curl -X POST http://localhost:5000/send-data \
 </details>
 
 <details>
-<summary><b>🔌 PLC Connection Issues</b></summary>
+<summary><b>PLC connection refused</b></summary>
 
-Test PLC connectivity:
 ```python
 import pymcprotocol
 mc = pymcprotocol.Type3E()
-print('Connected:', mc.connect('192.168.3.39', 5007))
+print(mc.connect('192.168.3.39', 5007))
 ```
 
-**Checklist:**
-- ✅ Verify MC Protocol settings on FX5U
-- ✅ Confirm port 5007 is enabled
-- ✅ Check IP address matches configuration
+Check that MC Protocol is enabled on the FX5U, port 5007 is open, and the IP matches `.env`.
 </details>
 
 <details>
-<summary><b>💾 Database Errors</b></summary>
+<summary><b>Database errors</b></summary>
 
-Reset database:
 ```bash
 rm data/motor_monitoring.db
 python main.py
@@ -385,70 +280,46 @@ python main.py
 </details>
 
 <details>
-<summary><b>🔒 Port Already in Use</b></summary>
+<summary><b>Port 5000 already in use</b></summary>
 
-Find process using port 5000:
 ```bash
-# On Linux/Mac
+# Linux/Mac
 lsof -i :5000
 
-# On Windows
+# Windows
 netstat -ano | findstr :5000
 ```
 
-Change port in `.env` file:
-```bash
-echo "FLASK_PORT=5001" >> .env
-```
+Set a different port: `FLASK_PORT=5001` in `.env`.
 </details>
 
 ---
 
-## 👨‍💻 Development
+## Extending the System
 
-### Adding New Sensors
-1. Update `hardware/esp_handler.py` to parse new data fields
-2. Add corresponding columns to `database/models.py`
-3. Modify health analysis in `ai/health_analyzer.py`
-4. Update dashboard display in `templates/dashboard.html`
+**New sensors** — Parse new fields in `hardware/esp_handler.py`, add columns to `database/models.py`, update scoring in `ai/health_analyzer.py`, and reflect changes in `templates/dashboard.html`.
 
-### Custom AI Models
-1. Extend `ai/health_analyzer.py` with new algorithms
-2. Add model persistence using joblib
-3. Create training scripts in `ai/` directory
-4. Update recommendation engine with new insights
+**Custom models** — Extend `ai/health_analyzer.py` with additional algorithms, persist models with joblib, and update the recommendation engine accordingly.
 
-### API Extensions
-1. Add new endpoints in `api/routes.py`
-2. Update WebSocket events for real-time features
-3. Document new API endpoints in README
-4. Create client examples in `examples/` directory
+**New API endpoints** — Add routes in `api/routes.py`, wire up WebSocket events, and document here.
 
 ---
 
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit: `git commit -m 'Add your feature'`
+4. Push: `git push origin feature/your-feature`
+5. Open a pull request
 
 ---
 
-## 💬 Support & Resources
+## Contact
 
-- **📧 Email**: khanbasharat3a1@gmail.com
-
-
----
+khanbasharat3a1@gmail.com
 
 <div align="center">
-
-**Built for Industrial IoT Excellence** | **Powered by AI** | **Data-Driven Insights**
-
-Made with ❤️ by Khan Basharat
 
 [![Star on GitHub](https://img.shields.io/github/stars/your-repo/ai-motor-monitoring.svg?style=social)](https://github.com/khanbasharat3a1/AI-Oveheat-Detection-and-Prevention-system---Industry-4.0-Project)
 [![Follow on GitHub](https://img.shields.io/github/followers/your-username.svg?style=social&label=Follow)](https://github.com/khanbasharat3a1)
